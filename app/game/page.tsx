@@ -223,7 +223,12 @@ function GamePageInner() {
               {score >= highScore && score > 0 && (
                 <p className="text-[#f59e0b] text-sm font-bold mb-2 animate-pulse">NEW RECORD!</p>
               )}
-              {score < highScore && (
+              {score < highScore && score >= highScore * 0.85 && highScore > 0 && (
+                <div className="mb-1 bg-orange-500/20 border border-orange-400/40 rounded-lg px-3 py-1.5 animate-pulse">
+                  <p className="text-orange-300 text-sm font-bold">あと {highScore - score} 点で自己ベスト更新！</p>
+                </div>
+              )}
+              {score < highScore && score < highScore * 0.85 && (
                 <div className="mb-1">
                   <p className="text-gray-400 text-xs">Best: {highScore}</p>
                   <p className="text-amber-300 text-sm font-bold">あと {highScore - score} 点で自己ベスト更新！</p>
