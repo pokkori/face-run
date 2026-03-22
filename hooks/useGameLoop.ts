@@ -217,6 +217,18 @@ export function useGameLoop(
         gd.combo += 1;
         if (gd.combo > gd.maxCombo) gd.maxCombo = gd.combo;
         playDodge();
+        // 回避スコアポップ表示
+        const dodgeColor = gd.combo >= 12 ? '#FF8C00' : gd.combo >= 5 ? '#f59e0b' : '#4ade80';
+        const dodgeText = gd.combo >= 5 ? `x${gd.combo >= 12 ? 3 : 2} DODGE!` : 'DODGE!';
+        gd.particles.push({
+          x: px + (Math.random() - 0.5) * 40,
+          y: py - 30,
+          vx: (Math.random() - 0.5) * 40,
+          vy: -80 - Math.random() * 40,
+          alpha: 1,
+          color: dodgeColor,
+          text: dodgeText,
+        });
         // コンボマイルストーン（x2: 5回、x3: 12回に調整して体験しやすく）
         if (gd.combo >= 12) {
           gd.comboDisplay = { text: 'COMBO x3', timeLeft: 2, multiplier: 3 };
@@ -296,10 +308,13 @@ export function useGameLoop(
       ctx.save();
       ctx.globalAlpha = p.alpha;
       if (p.text) {
-        ctx.fillStyle = '#FFD700';
-        ctx.font = `bold ${Math.round(16 * p.alpha + 4)}px system-ui`;
+        ctx.fillStyle = p.color || '#FFD700';
+        ctx.font = `bold ${Math.round(14 * p.alpha + 6)}px system-ui`;
         ctx.textAlign = 'center';
+        ctx.shadowColor = p.color || '#FFD700';
+        ctx.shadowBlur = 8;
         ctx.fillText(p.text, p.x, p.y);
+        ctx.shadowBlur = 0;
       } else {
         ctx.fillStyle = p.color;
         ctx.beginPath();
