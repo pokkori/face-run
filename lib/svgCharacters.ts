@@ -30,9 +30,38 @@ export const SVG_OBSTACLE_ENEMY = `<svg xmlns="http://www.w3.org/2000/svg" viewB
   <rect x="6" y="24" width="28" height="14" fill="#8B0000" rx="2"/>
 </svg>`;
 
-export type ObstacleType = 'rock' | 'flame' | 'enemy';
+export const SVG_OBSTACLE_BIRD = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40">
+  <!-- 鳥シルエット: 横長ボディ + 両翼 + くちばし + 尾 -->
+  <ellipse cx="20" cy="22" rx="10" ry="6" fill="#60a5fa"/>
+  <!-- 左翼（上方に広がる） -->
+  <path d="M14,22 Q6,10 2,14 Q8,18 14,20 Z" fill="#3b82f6"/>
+  <!-- 右翼（上方に広がる） -->
+  <path d="M26,22 Q34,10 38,14 Q32,18 26,20 Z" fill="#3b82f6"/>
+  <!-- くちばし -->
+  <polygon points="10,21 4,20 10,23" fill="#fbbf24"/>
+  <!-- 尾 -->
+  <path d="M30,22 Q36,18 38,22 Q36,26 30,24 Z" fill="#2563eb"/>
+  <!-- 目 -->
+  <circle cx="13" cy="21" r="2" fill="white"/>
+  <circle cx="13" cy="21" r="1" fill="#1e3a5f"/>
+</svg>`;
 
-export const OBSTACLE_TYPES: ObstacleType[] = ['rock', 'flame', 'enemy'];
+export const SVG_OBSTACLE_SPIKE = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40">
+  <!-- トゲ: 中央の大トゲ + 左右の小トゲ -->
+  <!-- ベース台座 -->
+  <rect x="2" y="32" width="36" height="6" fill="#b91c1c" rx="2"/>
+  <!-- 中央大トゲ -->
+  <polygon points="20,4 26,32 14,32" fill="#ef4444"/>
+  <polygon points="20,8 25,32 15,32" fill="#fca5a5"/>
+  <!-- 左トゲ -->
+  <polygon points="8,14 12,32 4,32" fill="#dc2626"/>
+  <!-- 右トゲ -->
+  <polygon points="32,14 36,32 28,32" fill="#dc2626"/>
+</svg>`;
+
+export type ObstacleType = 'rock' | 'flame' | 'enemy' | 'bird' | 'spike';
+
+export const OBSTACLE_TYPES: ObstacleType[] = ['rock', 'flame', 'enemy', 'bird', 'spike'];
 
 export function svgToImage(svgString: string, size: number): Promise<HTMLImageElement> {
   return new Promise((resolve) => {
@@ -49,14 +78,18 @@ export interface SvgImages {
   rock: HTMLImageElement;
   flame: HTMLImageElement;
   enemy: HTMLImageElement;
+  bird: HTMLImageElement;
+  spike: HTMLImageElement;
 }
 
 export async function loadAllSvgImages(): Promise<SvgImages> {
-  const [player, rock, flame, enemy] = await Promise.all([
+  const [player, rock, flame, enemy, bird, spike] = await Promise.all([
     svgToImage(SVG_PLAYER, 40),
     svgToImage(SVG_OBSTACLE_ROCK, 40),
     svgToImage(SVG_OBSTACLE_FLAME, 40),
     svgToImage(SVG_OBSTACLE_ENEMY, 40),
+    svgToImage(SVG_OBSTACLE_BIRD, 40),
+    svgToImage(SVG_OBSTACLE_SPIKE, 40),
   ]);
-  return { player, rock, flame, enemy };
+  return { player, rock, flame, enemy, bird, spike };
 }

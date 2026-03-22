@@ -222,8 +222,10 @@ export function useGameLoop(
     const px = laneX(gd.player.lane); const py = gd.player.y;
     gd.obstacles = gd.obstacles.filter((obs) => {
       obs.y += gd.speed * dt; const ox = laneX(obs.lane);
+      // bird は空中障害物: 描画・衝突ともに y から 30px 上にオフセット
+      const effectiveY = obs.type === 'bird' ? obs.y - 30 : obs.y;
       // 衝突判定
-      if (Math.abs(ox - px) < LANE_WIDTH * 0.5 && Math.abs(obs.y - py) < OBSTACLE_SIZE * 0.8) {
+      if (Math.abs(ox - px) < LANE_WIDTH * 0.5 && Math.abs(effectiveY - py) < OBSTACLE_SIZE * 0.8) {
         gd.player.isAlive = false;
         gd.combo = 0;
         gd.comboDisplay = null;
@@ -314,8 +316,14 @@ export function useGameLoop(
     gd.obstacles.forEach((obs) => {
       const ox = laneX(obs.lane);
       if (imgs) {
-        const img = obs.type === 'rock' ? imgs.rock : obs.type === 'flame' ? imgs.flame : imgs.enemy;
-        drawSvgChar(ctx, img, ox, obs.y, OBSTACLE_SIZE);
+        let img: HTMLImageElement;
+        if (obs.type === 'rock') img = imgs.rock;
+        else if (obs.type === 'flame') img = imgs.flame;
+        else if (obs.type === 'bird') img = imgs.bird;
+        else if (obs.type === 'spike') img = imgs.spike;
+        else img = imgs.enemy;
+        const drawY = obs.type === 'bird' ? obs.y - 30 : obs.y;
+        drawSvgChar(ctx, img, ox, drawY, OBSTACLE_SIZE);
       }
     });
 
