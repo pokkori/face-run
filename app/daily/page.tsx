@@ -1,26 +1,54 @@
 "use client";
-import { getTodayKey, getDailyTarget, getDailyResult, getStreak } from '../../lib/dailyChallenge';
+import { getTodayKey, getDailyTarget, getDailyResult, getStreak, getMilestoneReached, isAtRiskOfStreakBreak } from '../../lib/dailyChallenge';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
 export default function DailyPage() {
   const [result, setResult] = useState<ReturnType<typeof getDailyResult>>(null);
   const [streak, setStreak] = useState(0);
+  const [atRisk, setAtRisk] = useState(false);
   const todayKey = getTodayKey();
   const target = getDailyTarget(todayKey);
 
   useEffect(() => {
     setResult(getDailyResult());
-    setStreak(getStreak());
+    const s = getStreak();
+    setStreak(s);
+    setAtRisk(isAtRiskOfStreakBreak());
   }, []);
+
+  const milestone = getMilestoneReached(streak);
 
   return (
     <main className="min-h-screen bg-[#0f0c29] text-white flex flex-col items-center justify-center p-6">
       <h1 className="text-3xl font-bold text-amber-400 mb-2">デイリーチャレンジ</h1>
       <p className="text-gray-400 text-sm mb-6">{todayKey}</p>
+
+      {/* ストリーク失効警告 */}
+      {atRisk && streak > 0 && (
+        <div className="bg-red-500/15 border border-red-400/40 rounded-lg px-4 py-2 mb-4 text-center w-full max-w-sm">
+          <p className="text-red-300 text-sm font-bold">
+            今日プレイしないと {streak}日ストリークが消えます！
+          </p>
+        </div>
+      )}
+
+      {/* ストリーク表示（マイルストーン対応） */}
       {streak > 0 && (
-        <div className="bg-amber-500/20 border border-amber-400/30 rounded-lg px-6 py-3 mb-6">
-          <p className="text-amber-300 font-bold">{streak}日連続チャレンジ中！</p>
+        <div className={`rounded-lg px-6 py-3 mb-6 w-full max-w-sm text-center ${
+          milestone
+            ? 'bg-gradient-to-r from-amber-500/30 to-purple-500/30 border-2 border-amber-400 animate-pulse'
+            : 'bg-amber-500/20 border border-amber-400/30'
+        }`}>
+          <p className="text-amber-300 font-bold">
+            {milestone ? `★ ${milestone.label} ★` : `${streak}日連続チャレンジ中！`}
+          </p>
+          {milestone && (
+            <p className="text-amber-200 text-sm mt-1">{milestone.reward}</p>
+          )}
+          {!milestone && streak > 0 && streak < 7 && (
+            <p className="text-amber-400/70 text-xs mt-1">あと{7 - streak}日で7日達成！</p>
+          )}
         </div>
       )}
       <div className="bg-white/5 rounded-2xl p-8 text-center mb-8 w-full max-w-sm">

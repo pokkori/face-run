@@ -79,3 +79,25 @@ export function updateStreak(): void {
   localStorage.setItem('facerun_streak', String(current + 1));
   localStorage.setItem('facerun_streak_date', today);
 }
+
+// マイルストーン定義
+export const STREAK_MILESTONES = [
+  { days: 30, label: '1ヶ月連続！チャンピオン！', color: '#ef4444', reward: '伝説のランナー称号' },
+  { days: 14, label: '2週間連続！すごい！', color: '#a855f7', reward: 'スペシャルスキン解放' },
+  { days: 7,  label: '7日連続達成！', color: '#f59e0b', reward: 'フィーバーモード解放' },
+] as const;
+
+export function getMilestoneReached(streak: number): { days: number; label: string; color: string; reward: string } | null {
+  return STREAK_MILESTONES.find(m => streak === m.days) ?? null;
+}
+
+// 今日まだデイリーをプレイしていない && ストリークが1以上 = 失効リスクあり
+export function isAtRiskOfStreakBreak(): boolean {
+  if (typeof localStorage === 'undefined') return false;
+  const streak = getStreak();
+  if (streak === 0) return false;
+  const lastDate = localStorage.getItem('facerun_streak_date') || '';
+  const today = getTodayKey();
+  // 今日まだプレイしていない（かつストリーク継続中）= リスクあり
+  return lastDate !== today;
+}
