@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import Script from 'next/script';
+import { A2HSBanner } from '../components/A2HSBanner';
 import "./globals.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://face-run.vercel.app"),
+  manifest: "/manifest.json",
   title: "フェイスラン - 顔で操作するゲーム",
   description:
     "口を開けてジャンプ！眉を上げて二段ジャンプ！頭を傾けて左右移動！顔の動きだけで遊べるユニークなエンドレスランナー",
@@ -41,6 +43,7 @@ export default function RootLayout({
           />
         )}
         {children}
+        <A2HSBanner />
       </body>
     </html>
   );

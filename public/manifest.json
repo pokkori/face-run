@@ -1,0 +1,15 @@
+{
+  "name": "フェイスラン - 顔で操作するゲーム",
+  "short_name": "フェイスラン",
+  "description": "口を開けてジャンプ！顔の動きだけで遊べる新感覚ゲーム",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f0c29",
+  "theme_color": "#f59e0b",
+  "orientation": "portrait",
+  "icons": [
+    { "src": "/favicon.ico", "sizes": "48x48", "type": "image/x-icon" }
+  ],
+  "categories": ["games", "entertainment"],
+  "lang": "ja"
+}
