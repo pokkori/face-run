@@ -32,9 +32,9 @@ export default function GamePage() {
 
   const handleStart = () => { setShowControls(false); startGame(); };
 
-  const shareScore = score;
-  const shareText = encodeURIComponent('フェイスランで ' + shareScore + ' 点取ったよ！顔の動きで操作するゲーム！ #フェイスラン');
-  const shareUrl = encodeURIComponent('https://face-run.vercel.app/game');
+  // シェアURL修正（F-R25-4）
+  const shareText = encodeURIComponent(`フェイスランで${score}点達成！顔の動きだけで操作するゲーム！ #フェイスラン`);
+  const shareUrl = encodeURIComponent('https://face-run.vercel.app');
 
   return (
     <div className="min-h-screen bg-[#0f0c29] flex flex-col items-center justify-start pt-2 px-2">
@@ -61,25 +61,33 @@ export default function GamePage() {
         {showControls && gameState === 'idle' && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 rounded-xl">
             <div className="text-center px-6">
-              <div className="text-6xl mb-4">🥷</div>
-              <h2 className="text-2xl font-bold text-[#f59e0b] mb-6">フェイスラン</h2>
+              {/* 絵文字なし: SVNキャラはCanvas側で描画済み。オーバーレイはテキストのみ */}
+              <h2 className="text-2xl font-bold text-[#f59e0b] mb-4">フェイスラン</h2>
+
+              {/* チュートリアル（F-R25-8）*/}
+              <div className="bg-black/40 rounded-xl p-3 mb-4 text-left space-y-1">
+                <p className="text-white text-sm">口を開ける = ジャンプ</p>
+                <p className="text-white text-sm">頭を傾ける = 左右移動</p>
+                <p className="text-white text-sm">眉を上げる = 二段ジャンプ</p>
+              </div>
+
               {!cameraEnabled && (
                 <button onClick={enableCamera}
                   className="w-full mb-3 bg-white/10 hover:bg-white/20 border border-white/30 text-white py-3 px-4 rounded-xl text-sm transition-all">
-                  📷 カメラで顔認識を使う
+                  カメラで顔認識を使う
                 </button>
               )}
               {cameraEnabled && faceLoaded && (
-                <div className="text-green-400 text-sm mb-3">✅ 顔認識有効 — 口を開けてジャンプ！</div>
+                <div className="text-green-400 text-sm mb-3">顔認識有効 - 口を開けてジャンプ！</div>
               )}
               {cameraError && <p className="text-yellow-400 text-xs mb-3">{cameraError}</p>}
               {faceError && <p className="text-red-400 text-xs mb-3">{faceError}</p>}
               <button onClick={handleStart}
                 className="w-full bg-[#f59e0b] hover:bg-[#d97706] text-[#0f0c29] font-bold py-4 px-8 rounded-xl text-lg transition-all hover:scale-105 shadow-lg">
-                ▶ ゲームスタート
+                ゲームスタート
               </button>
               <div className="mt-4 text-xs text-gray-400 space-y-1">
-                <p>キーボード: スペース=ジャンプ / ←→=レーン変更</p>
+                <p>キーボード: スペース=ジャンプ / 左右矢印=レーン変更</p>
                 <p>タッチ: タップ=ジャンプ / スワイプ=レーン変更</p>
               </div>
             </div>
@@ -89,22 +97,23 @@ export default function GamePage() {
         {gameState === 'dead' && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/70 rounded-xl">
             <div className="text-center px-6">
-              <div className="text-5xl mb-3">💥</div>
+              {/* F-R25-4: 絵文字除去 */}
               <h2 className="text-3xl font-bold text-red-400 mb-2">ゲームオーバー</h2>
               <p className="text-[#f59e0b] text-5xl font-bold mb-1">{score}</p>
               <p className="text-gray-400 text-sm mb-1">点</p>
               {score >= highScore && score > 0 && (
-                <p className="text-[#f59e0b] text-sm font-bold mb-4">🏆 ハイスコア更新!</p>
+                <p className="text-[#f59e0b] text-sm font-bold mb-4">ハイスコア更新!</p>
               )}
               {score < highScore && <p className="text-gray-400 text-xs mb-4">Best: {highScore}</p>}
               <button onClick={() => { setShowControls(false); startGame(); }}
                 className="w-full bg-[#f59e0b] hover:bg-[#d97706] text-[#0f0c29] font-bold py-3 px-6 rounded-xl text-lg mb-3 transition-all hover:scale-105">
-                ↺ もう一度プレイ
+                もう一度プレイ
               </button>
-              <a href={`https://twitter.com/intent/tweet?text=&url=`}
+              {/* F-R25-4: シェアURL修正・絵文字除去 */}
+              <a href={`https://twitter.com/intent/tweet?text=${shareText}&url=${shareUrl}`}
                 target="_blank" rel="noopener noreferrer"
                 className="block w-full bg-black hover:bg-gray-900 text-white border border-white/30 py-3 px-6 rounded-xl text-sm text-center transition-all">
-                🐦 Xでシェア
+                X(Twitter)でシェア
               </a>
             </div>
           </div>

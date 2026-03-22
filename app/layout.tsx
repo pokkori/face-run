@@ -5,7 +5,7 @@ export const metadata: Metadata = {
   title: "フェイスラン - 顔で操作するゲーム",
   description:
     "口を開けてジャンプ！眉を上げて二段ジャンプ！頭を傾けて左右移動！顔の動きだけで遊べるユニークなエンドレスランナー",
-  icons: { icon: "data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🥷</text></svg>" },
+  icons: { icon: "/favicon.ico" },
   openGraph: {
     title: "フェイスラン - 顔で操作するゲーム",
     description:

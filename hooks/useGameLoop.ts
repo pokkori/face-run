@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 import type { FaceInput } from './useFaceDetection';
+import { type ObstacleType, OBSTACLE_TYPES, type SvgImages, loadAllSvgImages } from '@/lib/svgCharacters';
 
 const CANVAS_W = 360;
 const CANVAS_H = 640;
@@ -24,20 +25,37 @@ interface Player {
   lane: Lane; y: number; vy: number;
   isJumping: boolean; canDoubleJump: boolean; isAlive: boolean;
 }
-interface Obstacle { id: number; lane: Lane; y: number; emoji: string; }
+interface Obstacle { id: number; lane: Lane; y: number; type: ObstacleType; dodged: boolean; }
 interface Particle { x: number; y: number; vx: number; vy: number; alpha: number; color: string; }
 export type GameState = 'idle' | 'playing' | 'dead';
-interface GameData {
-  player: Player; obstacles: Obstacle[]; particles: Particle[];
-  score: number; speed: number; nextObstacleIn: number; obstacleId: number; elapsed: number;
+
+interface ComboDisplay {
+  text: string;
+  timeLeft: number;
+  multiplier: number;
 }
 
-const OBSTACLE_EMOJIS = ['🌳', '🏯', '💥', '🪨', '🗡️'];
+interface GameData {
+  player: Player;
+  obstacles: Obstacle[];
+  particles: Particle[];
+  score: number;
+  speed: number;
+  nextObstacleIn: number;
+  obstacleId: number;
+  elapsed: number;
+  combo: number;
+  comboDisplay: ComboDisplay | null;
+  shakeTime: number;
+}
 
 function laneX(lane: Lane): number { return LANE_WIDTH * lane + LANE_WIDTH / 2; }
 function randomLane(): Lane { return Math.floor(Math.random() * LANE_COUNT) as Lane; }
 function randomObstacleInterval(): number {
   return OBSTACLE_INTERVAL_MIN + Math.random() * (OBSTACLE_INTERVAL_MAX - OBSTACLE_INTERVAL_MIN);
+}
+function randomObstacleType(): ObstacleType {
+  return OBSTACLE_TYPES[Math.floor(Math.random() * OBSTACLE_TYPES.length)];
 }
 
 function initGame(): GameData {
@@ -45,6 +63,7 @@ function initGame(): GameData {
     player: { lane: 1, y: GROUND_Y, vy: 0, isJumping: false, canDoubleJump: false, isAlive: true },
     obstacles: [], particles: [], score: 0, speed: INITIAL_SPEED,
     nextObstacleIn: 1.5, obstacleId: 0, elapsed: 0,
+    combo: 0, comboDisplay: null, shakeTime: 0,
   };
 }
 
@@ -62,6 +81,12 @@ export function useGameLoop(
   const keysRef = useRef<Set<string>>(new Set());
   const touchStartXRef = useRef<number | null>(null);
   const jumpQueueRef = useRef({ jump: false, doubleJump: false });
+  const svgImagesRef = useRef<SvgImages | null>(null);
+
+  // SVG画像を事前ロード
+  useEffect(() => {
+    loadAllSvgImages().then((imgs) => { svgImagesRef.current = imgs; });
+  }, []);
 
   useEffect(() => {
     const hs = localStorage.getItem('facerun_highscore');
@@ -139,14 +164,14 @@ export function useGameLoop(
     ctx.beginPath(); ctx.moveTo(0, GROUND_Y); ctx.lineTo(CANVAS_W, GROUND_Y); ctx.stroke(); ctx.shadowBlur = 0;
   }, []);
 
-  const drawEmoji = useCallback((ctx: CanvasRenderingContext2D, emoji: string, x: number, y: number, size: number) => {
-    ctx.font = `${size}px serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(emoji, x, y);
+  const drawSvgChar = useCallback((ctx: CanvasRenderingContext2D, img: HTMLImageElement | null, x: number, y: number, size: number) => {
+    if (!img) return;
+    ctx.drawImage(img, x - size / 2, y - size / 2, size, size);
   }, []);
 
   const update = useCallback((dt: number) => {
     const gd = gameDataRef.current; if (!gd.player.isAlive) return;
     gd.elapsed += dt;
-    gd.score = Math.floor(gd.elapsed * 10 + (gd.speed - INITIAL_SPEED) * 0.5);
     gd.speed = INITIAL_SPEED + Math.floor(gd.elapsed / 10) * SPEED_INCREMENT;
     const fi = faceInputRef.current; const keys = keysRef.current;
     if (fi.doubleJump && gd.player.isJumping && gd.player.canDoubleJump) { doJump(gd); }
@@ -158,15 +183,44 @@ export function useGameLoop(
     if (gd.player.y >= GROUND_Y) { gd.player.y = GROUND_Y; gd.player.vy = 0; gd.player.isJumping = false; gd.player.canDoubleJump = false; }
     gd.nextObstacleIn -= dt;
     if (gd.nextObstacleIn <= 0) {
-      gd.obstacles.push({ id: gd.obstacleId++, lane: randomLane(), y: -OBSTACLE_SIZE, emoji: OBSTACLE_EMOJIS[Math.floor(Math.random() * OBSTACLE_EMOJIS.length)] });
+      gd.obstacles.push({ id: gd.obstacleId++, lane: randomLane(), y: -OBSTACLE_SIZE, type: randomObstacleType(), dodged: false });
       gd.nextObstacleIn = randomObstacleInterval() * (INITIAL_SPEED / gd.speed);
+    }
+    // シェイクタイマー更新
+    if (gd.shakeTime > 0) gd.shakeTime -= dt;
+    // コンボ表示タイマー更新
+    if (gd.comboDisplay) {
+      gd.comboDisplay.timeLeft -= dt;
+      if (gd.comboDisplay.timeLeft <= 0) gd.comboDisplay = null;
     }
     const px = laneX(gd.player.lane); const py = gd.player.y;
     gd.obstacles = gd.obstacles.filter((obs) => {
       obs.y += gd.speed * dt; const ox = laneX(obs.lane);
-      if (Math.abs(ox - px) < LANE_WIDTH * 0.5 && Math.abs(obs.y - py) < OBSTACLE_SIZE * 0.8) { gd.player.isAlive = false; spawnParticles(gd, px, py); return false; }
+      // 衝突判定
+      if (Math.abs(ox - px) < LANE_WIDTH * 0.5 && Math.abs(obs.y - py) < OBSTACLE_SIZE * 0.8) {
+        gd.player.isAlive = false;
+        gd.combo = 0;
+        gd.comboDisplay = null;
+        gd.shakeTime = 0.3;
+        spawnParticles(gd, px, py);
+        return false;
+      }
+      // 回避判定: 障害物がプレイヤーより下に通り過ぎた && まだ回避カウント未済
+      if (!obs.dodged && obs.y > py + OBSTACLE_SIZE) {
+        obs.dodged = true;
+        gd.combo += 1;
+        // コンボマイルストーン
+        if (gd.combo >= 20) {
+          gd.comboDisplay = { text: 'COMBO x3', timeLeft: 2, multiplier: 3 };
+        } else if (gd.combo >= 10) {
+          gd.comboDisplay = { text: 'COMBO x2', timeLeft: 2, multiplier: 2 };
+        }
+      }
       return obs.y < CANVAS_H + OBSTACLE_SIZE;
     });
+    // コンボ倍率込みスコア計算
+    const multiplier = gd.combo >= 20 ? 3 : gd.combo >= 10 ? 2 : 1;
+    gd.score = Math.floor((gd.elapsed * 10 + (gd.speed - INITIAL_SPEED) * 0.5) * multiplier);
     gd.particles = gd.particles
       .map((p) => ({ ...p, x: p.x + p.vx * dt, y: p.y + p.vy * dt, vy: p.vy + 200 * dt, alpha: p.alpha - dt * 2 }))
       .filter((p) => p.alpha > 0);
@@ -174,19 +228,73 @@ export function useGameLoop(
 
   const draw = useCallback((ctx: CanvasRenderingContext2D) => {
     const gd = gameDataRef.current;
+    const imgs = svgImagesRef.current;
+
+    // スクリーンシェイク
+    ctx.save();
+    if (gd.shakeTime > 0) {
+      const sx = (Math.random() - 0.5) * 10;
+      const sy = (Math.random() - 0.5) * 10;
+      ctx.translate(sx, sy);
+    }
+
     ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
     drawBackground(ctx, gd.elapsed);
-    gd.obstacles.forEach((obs) => { drawEmoji(ctx, obs.emoji, laneX(obs.lane), obs.y, OBSTACLE_SIZE); });
+
+    // 障害物描画 (SVG)
+    gd.obstacles.forEach((obs) => {
+      const ox = laneX(obs.lane);
+      if (imgs) {
+        const img = obs.type === 'rock' ? imgs.rock : obs.type === 'flame' ? imgs.flame : imgs.enemy;
+        drawSvgChar(ctx, img, ox, obs.y, OBSTACLE_SIZE);
+      }
+    });
+
+    // プレイヤー影
     const px = laneX(gd.player.lane);
     const ss = Math.max(0, 1 - (GROUND_Y - gd.player.y) / CANVAS_H);
     ctx.save(); ctx.globalAlpha = 0.3 * ss; ctx.fillStyle = '#000';
     ctx.beginPath(); ctx.ellipse(px, GROUND_Y + 4, PLAYER_SIZE * 0.4 * ss, 6 * ss, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore();
-    drawEmoji(ctx, '🥷', px, gd.player.y, PLAYER_SIZE);
+
+    // プレイヤー描画 (SVG忍者)
+    if (imgs) {
+      drawSvgChar(ctx, imgs.player, px, gd.player.y, PLAYER_SIZE);
+    }
+
+    // パーティクル
     gd.particles.forEach((p) => { ctx.save(); ctx.globalAlpha = p.alpha; ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(p.x, p.y, 4, 0, Math.PI * 2); ctx.fill(); ctx.restore(); });
+
+    // HUD: スコアバー
     ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.fillRect(0, 0, CANVAS_W, 48);
     ctx.fillStyle = '#f59e0b'; ctx.font = 'bold 20px system-ui'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
     ctx.fillText(`Score: ${gd.score}`, 12, 24);
-  }, [drawBackground, drawEmoji]);
+
+    // コンボ表示
+    if (gd.comboDisplay && gd.comboDisplay.timeLeft > 0) {
+      const alpha = Math.min(1, gd.comboDisplay.timeLeft / 0.5);
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = '#FFD700';
+      ctx.font = 'bold 32px system-ui';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.shadowColor = '#FF8C00';
+      ctx.shadowBlur = 12;
+      ctx.fillText(gd.comboDisplay.text, CANVAS_W / 2, CANVAS_H / 2 - 80);
+      ctx.restore();
+    }
+
+    // コンボカウンター常時表示
+    if (gd.combo >= 5) {
+      ctx.fillStyle = '#f59e0b';
+      ctx.font = 'bold 14px system-ui';
+      ctx.textAlign = 'right';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(`COMBO ${gd.combo}`, CANVAS_W - 12, 24);
+    }
+
+    ctx.restore();
+  }, [drawBackground, drawSvgChar]);
 
   const loop = useCallback((time: number) => {
     if (gameStateRef.current !== 'playing') return;
@@ -222,11 +330,33 @@ export function useGameLoop(
     const grad = ctx.createLinearGradient(0, 0, 0, CANVAS_H);
     grad.addColorStop(0, '#0f0c29'); grad.addColorStop(1, '#302b63');
     ctx.fillStyle = grad; ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+
+    // タイトル
     ctx.fillStyle = '#f59e0b'; ctx.font = 'bold 28px system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText('フェイスラン', CANVAS_W / 2, CANVAS_H / 2 - 60);
-    ctx.font = '64px serif'; ctx.fillText('🥷', CANVAS_W / 2, CANVAS_H / 2 + 10);
-    ctx.fillStyle = '#f3f4f6'; ctx.font = '18px system-ui';
-    ctx.fillText('スタートボタンを押してください', CANVAS_W / 2, CANVAS_H / 2 + 90);
+    ctx.fillText('フェイスラン', CANVAS_W / 2, CANVAS_H / 2 - 100);
+
+    // 忍者SVGをアイドル画面に描画（SVGロード済みなら使用）
+    const imgs = svgImagesRef.current;
+    if (imgs) {
+      ctx.drawImage(imgs.player, CANVAS_W / 2 - 32, CANVAS_H / 2 - 72, 64, 64);
+    } else {
+      ctx.fillStyle = '#f3f4f6'; ctx.font = 'bold 48px system-ui';
+      ctx.fillText('NINJA', CANVAS_W / 2, CANVAS_H / 2 - 40);
+    }
+
+    // チュートリアル3行
+    ctx.fillStyle = '#f3f4f6'; ctx.font = '15px system-ui'; ctx.textBaseline = 'top';
+    const tutLines = [
+      '口を開ける = ジャンプ',
+      '頭を傾ける = 左右移動',
+      '眉を上げる = 二段ジャンプ',
+    ];
+    tutLines.forEach((line, i) => {
+      ctx.fillText(line, CANVAS_W / 2, CANVAS_H / 2 + 10 + i * 24);
+    });
+
+    ctx.fillStyle = '#9ca3af'; ctx.font = '16px system-ui'; ctx.textBaseline = 'middle';
+    ctx.fillText('スタートボタンを押してください', CANVAS_W / 2, CANVAS_H / 2 + 110);
   }, [gameState, canvasRef]);
 
   return { gameState, score, highScore, startGame, stopGame };
