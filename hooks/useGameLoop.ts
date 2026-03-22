@@ -19,6 +19,9 @@ const SPEED_INCREMENT = 20;
 const OBSTACLE_INTERVAL_MIN = 0.8;
 const OBSTACLE_INTERVAL_MAX = 2.0;
 const PARTICLES_PER_HIT = 12;
+const FEVER_COMBO_THRESHOLD = 15;
+const FEVER_DURATION = 10;
+const FEVER_SPEED_BOOST = 1.35;
 
 type Lane = 0 | 1 | 2;
 
@@ -50,6 +53,8 @@ interface GameData {
   comboDisplay: ComboDisplay | null;
   shakeTime: number;
   deadAnimScore: number;
+  feverTime: number;
+  feverEnterAlpha: number;
 }
 
 function laneX(lane: Lane): number { return LANE_WIDTH * lane + LANE_WIDTH / 2; }
@@ -67,6 +72,7 @@ function initGame(): GameData {
     obstacles: [], particles: [], score: 0, speed: INITIAL_SPEED,
     nextObstacleIn: 1.5, obstacleId: 0, elapsed: 0,
     combo: 0, maxCombo: 0, comboDisplay: null, shakeTime: 0, deadAnimScore: 0,
+    feverTime: 0, feverEnterAlpha: 0,
   };
 }
 
@@ -153,9 +159,16 @@ export function useGameLoop(
     }
   }, []);
 
-  const drawBackground = useCallback((ctx: CanvasRenderingContext2D, elapsed: number) => {
+  const drawBackground = useCallback((ctx: CanvasRenderingContext2D, elapsed: number, isFever: boolean) => {
     const grad = ctx.createLinearGradient(0, 0, 0, CANVAS_H);
-    grad.addColorStop(0, '#0f0c29'); grad.addColorStop(0.6, '#302b63'); grad.addColorStop(1, '#24243e');
+    if (isFever) {
+      const pulse = Math.sin(elapsed * 6) * 0.15 + 0.85;
+      grad.addColorStop(0, `rgba(${Math.round(180*pulse)},${Math.round(60*pulse)},0,1)`);
+      grad.addColorStop(0.5, `rgba(${Math.round(120*pulse)},${Math.round(20*pulse)},0,1)`);
+      grad.addColorStop(1, `rgba(60,0,0,1)`);
+    } else {
+      grad.addColorStop(0, '#0f0c29'); grad.addColorStop(0.6, '#302b63'); grad.addColorStop(1, '#24243e');
+    }
     ctx.fillStyle = grad; ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
     const stars = [[30,40],[80,20],[150,60],[220,30],[300,50],[50,90],[130,110],[250,80],[320,100],[10,130],[180,140],[340,20],[70,160],[210,170],[280,130]];
     stars.forEach(([sx, sy]) => { const t = Math.sin(elapsed * 2 + sx) * 0.3 + 0.7; ctx.globalAlpha = t; ctx.fillStyle = 'rgba(255,255,255,0.7)'; ctx.fillRect(sx, sy, 2, 2); });
@@ -178,7 +191,12 @@ export function useGameLoop(
   const update = useCallback((dt: number) => {
     const gd = gameDataRef.current; if (!gd.player.isAlive) return;
     gd.elapsed += dt;
-    gd.speed = INITIAL_SPEED + Math.floor(gd.elapsed / 10) * SPEED_INCREMENT;
+    const isFever = gd.feverTime > 0;
+    const baseSpeed = INITIAL_SPEED + Math.floor(gd.elapsed / 10) * SPEED_INCREMENT;
+    gd.speed = isFever ? baseSpeed * FEVER_SPEED_BOOST : baseSpeed;
+    // フィーバータイマー更新
+    if (gd.feverTime > 0) { gd.feverTime -= dt; if (gd.feverTime <= 0) { gd.feverTime = 0; gd.combo = 0; gd.comboDisplay = null; } }
+    if (gd.feverEnterAlpha > 0) gd.feverEnterAlpha = Math.max(0, gd.feverEnterAlpha - dt * 2);
     const fi = faceInputRef.current; const keys = keysRef.current;
     if (fi.doubleJump && gd.player.isJumping && gd.player.canDoubleJump) { doJump(gd); }
     else if (fi.jump || jumpQueueRef.current.jump) { doJump(gd); jumpQueueRef.current.jump = false; }
@@ -232,19 +250,24 @@ export function useGameLoop(
           color: dodgeColor,
           text: dodgeText,
         });
-        // コンボマイルストーン（x2: 5回、x3: 12回に調整して体験しやすく）
-        if (gd.combo >= 12) {
+        // フィーバー突入（15連続回避）
+        if (gd.combo >= FEVER_COMBO_THRESHOLD && gd.feverTime <= 0) {
+          gd.feverTime = FEVER_DURATION;
+          gd.feverEnterAlpha = 1;
+          gd.comboDisplay = { text: 'FEVER!!!', timeLeft: 2.5, multiplier: 3 };
+          playCombo(3);
+        } else if (gd.combo >= 12 && gd.feverTime <= 0) {
           gd.comboDisplay = { text: 'COMBO x3', timeLeft: 2, multiplier: 3 };
           playCombo(3);
-        } else if (gd.combo >= 5) {
+        } else if (gd.combo >= 5 && gd.feverTime <= 0) {
           gd.comboDisplay = { text: 'COMBO x2', timeLeft: 2, multiplier: 2 };
           playCombo(2);
         }
       }
       return obs.y < CANVAS_H + OBSTACLE_SIZE;
     });
-    // コンボ倍率込みスコア計算（comboDisplay表示と一致させる: x2=5回, x3=12回）
-    const multiplier = gd.combo >= 12 ? 3 : gd.combo >= 5 ? 2 : 1;
+    // コンボ倍率込みスコア計算（フィーバー中=x4）
+    const multiplier = isFever ? 4 : gd.combo >= 12 ? 3 : gd.combo >= 5 ? 2 : 1;
     gd.score = Math.floor((gd.elapsed * 10 + (gd.speed - INITIAL_SPEED) * 0.5) * multiplier);
     // スコア100倍数達成パーティクル
     const canvas = canvasRef.current;
@@ -283,8 +306,9 @@ export function useGameLoop(
       ctx.translate(sx, sy);
     }
 
+    const isFever = gd.feverTime > 0;
     ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
-    drawBackground(ctx, gd.elapsed);
+    drawBackground(ctx, gd.elapsed, isFever);
 
     // 障害物描画 (SVG)
     gd.obstacles.forEach((obs) => {
@@ -358,15 +382,36 @@ export function useGameLoop(
     // コンボ演出（中央）
     if (gd.comboDisplay && gd.comboDisplay.timeLeft > 0) {
       const alpha = Math.min(1, gd.comboDisplay.timeLeft / 0.5);
+      const isFeverText = gd.comboDisplay.text === 'FEVER!!!';
       ctx.save();
       ctx.globalAlpha = alpha;
-      ctx.fillStyle = '#FFD700';
-      ctx.font = 'bold 32px system-ui';
+      ctx.fillStyle = isFeverText ? '#FF4500' : '#FFD700';
+      ctx.font = `bold ${isFeverText ? 40 : 32}px system-ui`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.shadowColor = '#FF8C00';
-      ctx.shadowBlur = 12;
+      ctx.shadowColor = isFeverText ? '#FF0000' : '#FF8C00';
+      ctx.shadowBlur = isFeverText ? 20 : 12;
       ctx.fillText(gd.comboDisplay.text, CANVAS_W / 2, CANVAS_H / 2 - 80);
+      ctx.restore();
+    }
+
+    // フィーバー突入フラッシュ（白→透明）
+    if (gd.feverEnterAlpha > 0) {
+      ctx.save();
+      ctx.globalAlpha = gd.feverEnterAlpha * 0.6;
+      ctx.fillStyle = '#FF6600';
+      ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+      ctx.restore();
+    }
+
+    // フィーバー中: 残り秒数バー（上部）
+    if (isFever) {
+      const ratio = gd.feverTime / FEVER_DURATION;
+      ctx.save();
+      ctx.fillStyle = 'rgba(255,100,0,0.25)';
+      ctx.fillRect(0, 48, CANVAS_W, 4);
+      ctx.fillStyle = `rgba(255,${Math.round(200*ratio)},0,0.85)`;
+      ctx.fillRect(0, 48, CANVAS_W * ratio, 4);
       ctx.restore();
     }
 
