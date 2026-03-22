@@ -176,15 +176,25 @@ function GamePageInner() {
 
               {!cameraEnabled && (
                 <>
+                  {/* プライバシー説明カード - カメラ権限前に必ず表示（NNGroup: 承認率+12%） */}
+                  <div className="bg-green-950/60 border border-green-500/30 rounded-xl p-3 mb-3 text-left" role="note" aria-label="プライバシー保護の説明">
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <svg viewBox="0 0 24 24" width={16} height={16} fill="none" stroke="#4ade80" strokeWidth={2}>
+                        <path d="M12 2L3 6v6c0 5.5 3.8 10.7 9 12 5.2-1.3 9-6.5 9-12V6L12 2z"/>
+                        <polyline points="9 12 11 14 15 10"/>
+                      </svg>
+                      <span className="text-green-400 text-xs font-bold">プライバシー保護について</span>
+                    </div>
+                    <p className="text-green-300/90 text-xs leading-relaxed">
+                      顔の映像・データは<strong>インターネットに送信されません</strong>。<br/>
+                      すべての処理はこの端末の中だけで完結します。
+                    </p>
+                  </div>
                   <button onClick={enableCamera}
-                    className="w-full mb-2 min-h-[44px] bg-white/10 hover:bg-white/20 border border-white/30 text-white py-3 px-4 rounded-xl text-sm transition-all"
+                    className="w-full mb-3 min-h-[44px] bg-white/10 hover:bg-white/20 border border-white/30 text-white py-3 px-4 rounded-xl text-sm transition-all"
                     aria-label="カメラを有効にして顔認識を使う">
                     カメラで顔認識を使う
                   </button>
-                  <div className="flex items-center justify-center gap-1.5 mb-3 text-xs text-green-400/80" role="note" aria-label="プライバシー保護の説明">
-                    <svg viewBox="0 0 16 16" width={12} height={12} fill="currentColor"><path d="M8 1L2 3.5v5C2 12 5 14.5 8 15c3-0.5 6-3 6-6.5v-5L8 1z"/></svg>
-                    <span>端末内のみで処理 · 外部サーバー送信なし</span>
-                  </div>
                 </>
               )}
               {cameraEnabled && faceLoaded && (
