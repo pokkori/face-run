@@ -217,11 +217,11 @@ export function useGameLoop(
         gd.combo += 1;
         if (gd.combo > gd.maxCombo) gd.maxCombo = gd.combo;
         playDodge();
-        // コンボマイルストーン
-        if (gd.combo >= 20) {
+        // コンボマイルストーン（x2: 5回、x3: 12回に調整して体験しやすく）
+        if (gd.combo >= 12) {
           gd.comboDisplay = { text: 'COMBO x3', timeLeft: 2, multiplier: 3 };
           playCombo(3);
-        } else if (gd.combo >= 10) {
+        } else if (gd.combo >= 5) {
           gd.comboDisplay = { text: 'COMBO x2', timeLeft: 2, multiplier: 2 };
           playCombo(2);
         }

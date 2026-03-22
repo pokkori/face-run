@@ -43,7 +43,8 @@ function GamePageInner() {
 
   const { isLoaded: faceLoaded, isLoading: faceLoading, error: faceError, faceInputRef, loadModels } = useFaceDetection(videoRef, sensitivity);
   const { gameState, score, highScore, maxCombo, startGame } = useGameLoop(canvasRef, faceInputRef);
-  const { startBGM, stopBGM } = useBGM();
+  const { startBGM, stopBGM, toggleMute } = useBGM();
+  const [isMuted, setIsMuted] = useState(false);
 
   // ゲームオーバー時: BGM停止 & デイリー結果保存
   useEffect(() => {
@@ -97,7 +98,24 @@ function GamePageInner() {
       <div className="w-full max-w-sm flex items-center justify-between mb-2">
         <Link href="/" className="text-[#f59e0b] text-sm hover:underline min-h-[44px] flex items-center" aria-label="ホームに戻る">← ホーム</Link>
         <span className="text-white font-bold">フェイスラン</span>
-        <div className="text-xs text-gray-400">Best: <span className="text-[#f59e0b] font-bold">{highScore}</span></div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => { const muted = toggleMute(); setIsMuted(muted); }}
+            className="text-gray-400 hover:text-white min-h-[44px] min-w-[44px] flex items-center justify-center"
+            aria-label={isMuted ? '音をオンにする' : '音をオフにする'}
+          >
+            {isMuted ? (
+              <svg viewBox="0 0 24 24" width={20} height={20} fill="none" stroke="currentColor" strokeWidth={2}>
+                <path d="M11 5L6 9H2v6h4l5 4V5z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>
+              </svg>
+            ) : (
+              <svg viewBox="0 0 24 24" width={20} height={20} fill="none" stroke="currentColor" strokeWidth={2}>
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>
+              </svg>
+            )}
+          </button>
+          <div className="text-xs text-gray-400">Best: <span className="text-[#f59e0b] font-bold">{highScore}</span></div>
+        </div>
       </div>
 
       <div className="relative" style={{ width: 360, height: 640 }}>

@@ -25,7 +25,15 @@ export function useBGM() {
     }
   }, []);
 
-  return { startBGM, stopBGM };
+  const toggleMute = useCallback(() => {
+    if (bgmRef.current) {
+      bgmRef.current.muted = !bgmRef.current.muted;
+      return bgmRef.current.muted;
+    }
+    return false;
+  }, []);
+
+  return { startBGM, stopBGM, toggleMute };
 }
 
 export function useAudio() {
