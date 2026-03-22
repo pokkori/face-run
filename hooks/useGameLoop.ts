@@ -189,7 +189,9 @@ export function useGameLoop(
     gd.nextObstacleIn -= dt;
     if (gd.nextObstacleIn <= 0) {
       gd.obstacles.push({ id: gd.obstacleId++, lane: randomLane(), y: -OBSTACLE_SIZE, type: randomObstacleType(), dodged: false });
-      gd.nextObstacleIn = randomObstacleInterval() * (INITIAL_SPEED / gd.speed);
+      // 最初15秒は障害物間隔を広げて初心者が慣れやすくする（FTUE改善）
+      const easeInFactor = gd.elapsed < 8 ? 2.5 : gd.elapsed < 15 ? 1.6 : 1.0;
+      gd.nextObstacleIn = randomObstacleInterval() * (INITIAL_SPEED / gd.speed) * easeInFactor;
     }
     // シェイクタイマー更新
     if (gd.shakeTime > 0) gd.shakeTime -= dt;
