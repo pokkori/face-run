@@ -1,6 +1,6 @@
 import { MetadataRoute } from "next";
 export default function sitemap(): MetadataRoute.Sitemap {
-  const base = "https://face-run-pokkoris-projects.vercel.app";
+  const base = "https://face-run.vercel.app";
   return [
     { url: base, lastModified: new Date(), changeFrequency: "weekly", priority: 1 },
     { url: `${base}/game`, lastModified: new Date(), changeFrequency: "weekly", priority: 0.9 },
