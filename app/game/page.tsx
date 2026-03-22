@@ -7,7 +7,7 @@ import { useFaceDetection } from '@/hooks/useFaceDetection';
 import { useGameLoop } from '@/hooks/useGameLoop';
 import { useBGM } from '@/hooks/useAudio';
 import { generateScoreCard } from '../../lib/generateScoreCard';
-import { saveDailyResult } from '../../lib/dailyChallenge';
+import { saveDailyResult, getStreak, getDailyTarget, getTodayKey } from '../../lib/dailyChallenge';
 import { AdBanner } from '../../components/AdBanner';
 
 export default function GamePage() {
@@ -46,15 +46,16 @@ function GamePageInner() {
   const { startBGM, stopBGM, toggleMute } = useBGM();
   const [isMuted, setIsMuted] = useState(false);
 
+  const [streak, setStreak] = useState(0);
+
   // ゲームオーバー時: BGM停止 & デイリー結果保存
   useEffect(() => {
     if (gameState === 'dead') {
       stopBGM();
-      if (isDailyMode) {
-        saveDailyResult(score);
-      }
+      saveDailyResult(score);
+      setStreak(getStreak());
     }
-  }, [gameState, score, isDailyMode, stopBGM]);
+  }, [gameState, score, stopBGM]);
 
   const enableCamera = async () => {
     try {
@@ -248,15 +249,23 @@ function GamePageInner() {
                 <p className="text-xs mb-2" style={{ color: rankColor }}>あと{nextRankScore - score}点でランク{rank === 'D' ? 'C' : rank === 'C' ? 'B' : rank === 'B' ? 'A' : 'S'}！</p>
               )}
 
-              {/* デイリーチャレンジ達成バナー */}
-              {isDailyMode && score >= dailyTarget && (
-                <div className="bg-green-500/20 border border-green-400/30 rounded-lg px-4 py-2 mb-3">
-                  <p className="text-green-400 font-bold">目標達成！</p>
+              {/* ストリーク表示 */}
+              {streak > 0 && (
+                <div className={`flex items-center justify-center gap-2 mb-2 px-4 py-2 rounded-lg ${streak >= 7 ? 'bg-amber-500/25 border border-amber-400/50' : 'bg-white/5'}`}>
+                  <svg viewBox="0 0 24 24" width={16} height={16} fill={streak >= 7 ? '#FFD700' : '#f59e0b'}>
+                    <path d="M13 2L4.5 13.5H11L10 22L19.5 10.5H13L13 2Z"/>
+                  </svg>
+                  <span className={`text-sm font-bold ${streak >= 7 ? 'text-amber-300' : 'text-gray-300'}`}>
+                    {streak}日連続！
+                    {streak >= 7 && ' 🔥 7日達成！'}
+                  </span>
                 </div>
               )}
-              {isDailyMode && score < dailyTarget && (
-                <div className="bg-white/5 rounded-lg px-4 py-2 mb-3">
-                  <p className="text-gray-400 text-sm">目標まであと{dailyTarget - score}点</p>
+
+              {/* デイリーチャレンジ達成バナー */}
+              {score >= getDailyTarget(getTodayKey()) && (
+                <div className="bg-green-500/20 border border-green-400/30 rounded-lg px-4 py-2 mb-3">
+                  <p className="text-green-400 font-bold">デイリー目標達成！</p>
                 </div>
               )}
 
