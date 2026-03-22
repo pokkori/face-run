@@ -103,7 +103,10 @@ function GamePageInner() {
       <div className="relative" style={{ width: 360, height: 640 }}>
         <canvas ref={canvasRef} width={360} height={640}
           className="rounded-xl border border-white/20 shadow-2xl shadow-purple-900/50"
-          style={{ touchAction: "none" }} />
+          style={{ touchAction: "none" }}
+          role="img"
+          aria-label={gameState === 'playing' ? `フェイスラン ゲームプレイ中 スコア${score}` : gameState === 'dead' ? `ゲームオーバー 最終スコア${score}` : 'フェイスラン ゲーム画面'}
+        />
 
         {cameraEnabled && (
           <div className="absolute bottom-4 right-4 opacity-60 rounded-lg overflow-hidden border border-white/30">
