@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { DailyButton } from "../components/DailyButton";
 
 // インラインSVG忍者キャラ（絵文字代替）
 function NinjaSvg() {
@@ -36,10 +37,13 @@ export default function Home() {
         </p>
         <Link
           href="/game"
-          className="inline-block bg-[#f59e0b] hover:bg-[#d97706] text-[#0f0c29] font-bold text-xl px-10 py-4 rounded-full transition-all duration-200 hover:scale-105 shadow-lg shadow-[#f59e0b]/30"
+          className="inline-block bg-[#f59e0b] hover:bg-[#d97706] text-[#0f0c29] font-bold text-xl px-10 py-4 rounded-full transition-all duration-200 hover:scale-105 shadow-lg shadow-[#f59e0b]/30 mb-4"
         >
           遊んでみる
         </Link>
+        <div className="w-full max-w-xs mx-auto">
+          <DailyButton />
+        </div>
       </div>
 
       {/* 操作方法 */}

@@ -2,6 +2,32 @@
 
 import { useRef, useCallback } from 'react';
 
+export function useBGM() {
+  const bgmRef = useRef<HTMLAudioElement | null>(null);
+
+  const startBGM = useCallback(() => {
+    if (bgmRef.current) return; // already playing
+    try {
+      const audio = new Audio('/sounds/bgm_play.mp3');
+      audio.loop = true;
+      audio.volume = 0.4;
+      audio.play().catch(() => {}); // autoplay policy safe
+      bgmRef.current = audio;
+    } catch (e) {
+      // MP3ファイル未配置時はスキップ
+    }
+  }, []);
+
+  const stopBGM = useCallback(() => {
+    if (bgmRef.current) {
+      bgmRef.current.pause();
+      bgmRef.current = null;
+    }
+  }, []);
+
+  return { startBGM, stopBGM };
+}
+
 export function useAudio() {
   const ctxRef = useRef<AudioContext | null>(null);
 

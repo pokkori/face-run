@@ -27,7 +27,7 @@ interface Player {
   isJumping: boolean; canDoubleJump: boolean; isAlive: boolean;
 }
 interface Obstacle { id: number; lane: Lane; y: number; type: ObstacleType; dodged: boolean; }
-interface Particle { x: number; y: number; vx: number; vy: number; alpha: number; color: string; }
+interface Particle { x: number; y: number; vx: number; vy: number; alpha: number; color: string; text?: string; }
 export type GameState = 'idle' | 'playing' | 'dead';
 
 interface ComboDisplay {
@@ -77,6 +77,7 @@ export function useGameLoop(
   const [highScore, setHighScore] = useState(0);
   const gameDataRef = useRef<GameData>(initGame());
   const gameStateRef = useRef<GameState>('idle');
+  const prevScoreRef = useRef(0);
   const animFrameRef = useRef<number>(0);
   const lastTimeRef = useRef<number>(0);
   const keysRef = useRef<Set<string>>(new Set());
@@ -227,6 +228,26 @@ export function useGameLoop(
     // コンボ倍率込みスコア計算
     const multiplier = gd.combo >= 20 ? 3 : gd.combo >= 10 ? 2 : 1;
     gd.score = Math.floor((gd.elapsed * 10 + (gd.speed - INITIAL_SPEED) * 0.5) * multiplier);
+    // スコア100倍数達成パーティクル
+    const canvas = canvasRef.current;
+    if (canvas) {
+      const prevHundreds = Math.floor(prevScoreRef.current / 100);
+      const currHundreds = Math.floor(gd.score / 100);
+      if (currHundreds > prevHundreds && gd.score > 0) {
+        for (let i = 0; i < 3; i++) {
+          gd.particles.push({
+            x: canvas.width / 2 + (Math.random() - 0.5) * 100,
+            y: canvas.height / 2,
+            vx: (Math.random() - 0.5) * 2,
+            vy: -3 - Math.random() * 2,
+            alpha: 1,
+            color: '#FFD700',
+            text: '+100',
+          });
+        }
+      }
+    }
+    prevScoreRef.current = gd.score;
     gd.particles = gd.particles
       .map((p) => ({ ...p, x: p.x + p.vx * dt, y: p.y + p.vy * dt, vy: p.vy + 200 * dt, alpha: p.alpha - dt * 2 }))
       .filter((p) => p.alpha > 0);
@@ -268,7 +289,22 @@ export function useGameLoop(
     }
 
     // パーティクル
-    gd.particles.forEach((p) => { ctx.save(); ctx.globalAlpha = p.alpha; ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(p.x, p.y, 4, 0, Math.PI * 2); ctx.fill(); ctx.restore(); });
+    gd.particles.forEach((p) => {
+      ctx.save();
+      ctx.globalAlpha = p.alpha;
+      if (p.text) {
+        ctx.fillStyle = '#FFD700';
+        ctx.font = `bold ${Math.round(16 * p.alpha + 4)}px system-ui`;
+        ctx.textAlign = 'center';
+        ctx.fillText(p.text, p.x, p.y);
+      } else {
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+    });
 
     // HUD: スコアバー
     ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.fillRect(0, 0, CANVAS_W, 48);

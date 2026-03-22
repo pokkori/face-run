@@ -12,11 +12,11 @@ export interface FaceInput {
 const MODEL_URL =
   "https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model";
 
-const MOUTH_OPEN_THRESHOLD = 18;
-const EYEBROW_RAISE_THRESHOLD = 22;
-const TILT_THRESHOLD = 15;
+const BASE_MOUTH_OPEN_THRESHOLD = 18;
+const BASE_EYEBROW_RAISE_THRESHOLD = 22;
+const BASE_TILT_THRESHOLD = 15;
 
-export function useFaceDetection(videoRef: React.RefObject<HTMLVideoElement | null>) {
+export function useFaceDetection(videoRef: React.RefObject<HTMLVideoElement | null>, sensitivity = 0.5) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -26,6 +26,8 @@ export function useFaceDetection(videoRef: React.RefObject<HTMLVideoElement | nu
     moveLeft: false,
     moveRight: false,
   });
+  const sensitivityRef = useRef(sensitivity);
+  sensitivityRef.current = sensitivity;
   const prevMouthOpen = useRef(false);
   const prevBrowRaised = useRef(false);
   const prevTiltLeft = useRef(false);
@@ -65,6 +67,11 @@ export function useFaceDetection(videoRef: React.RefObject<HTMLVideoElement | nu
         .withFaceLandmarks(true);
 
       if (detection) {
+        const s = sensitivityRef.current;
+        const MOUTH_OPEN_THRESHOLD = BASE_MOUTH_OPEN_THRESHOLD / s;
+        const EYEBROW_RAISE_THRESHOLD = BASE_EYEBROW_RAISE_THRESHOLD / s;
+        const TILT_THRESHOLD = BASE_TILT_THRESHOLD * (2 - s);
+
         const landmarks = detection.landmarks;
         const mouth = landmarks.getMouth();
         const leftEye = landmarks.getLeftEye();
@@ -79,10 +86,10 @@ export function useFaceDetection(videoRef: React.RefObject<HTMLVideoElement | nu
         const isMouthOpen = mouthOpenDist > MOUTH_OPEN_THRESHOLD;
 
         // 眉の上昇: 眉の平均Y と 目の平均Y の距離
-        const leftBrowY = leftBrow.reduce((s, p) => s + p.y, 0) / leftBrow.length;
-        const rightBrowY = rightBrow.reduce((s, p) => s + p.y, 0) / rightBrow.length;
-        const leftEyeY = leftEye.reduce((s, p) => s + p.y, 0) / leftEye.length;
-        const rightEyeY = rightEye.reduce((s, p) => s + p.y, 0) / rightEye.length;
+        const leftBrowY = leftBrow.reduce((acc, p) => acc + p.y, 0) / leftBrow.length;
+        const rightBrowY = rightBrow.reduce((acc, p) => acc + p.y, 0) / rightBrow.length;
+        const leftEyeY = leftEye.reduce((acc, p) => acc + p.y, 0) / leftEye.length;
+        const rightEyeY = rightEye.reduce((acc, p) => acc + p.y, 0) / rightEye.length;
         const leftBrowEyeDist = leftEyeY - leftBrowY;
         const rightBrowEyeDist = rightEyeY - rightBrowY;
         const avgBrowEyeDist = (leftBrowEyeDist + rightBrowEyeDist) / 2;
