@@ -188,9 +188,14 @@ function GamePageInner() {
               <p className="text-[#f59e0b] text-5xl font-bold mb-1">{score}</p>
               <p className="text-gray-400 text-sm mb-1">点</p>
               {score >= highScore && score > 0 && (
-                <p className="text-[#f59e0b] text-sm font-bold mb-2">ハイスコア更新!</p>
+                <p className="text-[#f59e0b] text-sm font-bold mb-2 animate-pulse">NEW RECORD!</p>
               )}
-              {score < highScore && <p className="text-gray-400 text-xs mb-2">Best: {highScore}</p>}
+              {score < highScore && (
+                <div className="mb-2">
+                  <p className="text-gray-400 text-xs">Best: {highScore}</p>
+                  <p className="text-amber-300 text-sm font-bold">あと {highScore - score} 点で自己ベスト更新！</p>
+                </div>
+              )}
 
               {/* デイリーチャレンジ達成バナー */}
               {isDailyMode && score >= dailyTarget && (
