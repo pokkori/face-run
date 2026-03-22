@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import type { FaceInput } from './useFaceDetection';
 import { type ObstacleType, OBSTACLE_TYPES, type SvgImages, loadAllSvgImages } from '@/lib/svgCharacters';
+import { useAudio } from './useAudio';
 
 const CANVAS_W = 360;
 const CANVAS_H = 640;
@@ -82,6 +83,7 @@ export function useGameLoop(
   const touchStartXRef = useRef<number | null>(null);
   const jumpQueueRef = useRef({ jump: false, doubleJump: false });
   const svgImagesRef = useRef<SvgImages | null>(null);
+  const { playDodge, playCombo, playGameOver, resume } = useAudio();
 
   // SVG画像を事前ロード
   useEffect(() => {
@@ -203,17 +205,21 @@ export function useGameLoop(
         gd.comboDisplay = null;
         gd.shakeTime = 0.3;
         spawnParticles(gd, px, py);
+        playGameOver();
         return false;
       }
       // 回避判定: 障害物がプレイヤーより下に通り過ぎた && まだ回避カウント未済
       if (!obs.dodged && obs.y > py + OBSTACLE_SIZE) {
         obs.dodged = true;
         gd.combo += 1;
+        playDodge();
         // コンボマイルストーン
         if (gd.combo >= 20) {
           gd.comboDisplay = { text: 'COMBO x3', timeLeft: 2, multiplier: 3 };
+          playCombo(3);
         } else if (gd.combo >= 10) {
           gd.comboDisplay = { text: 'COMBO x2', timeLeft: 2, multiplier: 2 };
+          playCombo(2);
         }
       }
       return obs.y < CANVAS_H + OBSTACLE_SIZE;
@@ -312,9 +318,10 @@ export function useGameLoop(
   }, [update, draw, canvasRef]);
 
   const startGame = useCallback(() => {
+    resume();
     gameDataRef.current = initGame(); gameStateRef.current = 'playing'; setGameState('playing'); setScore(0);
     lastTimeRef.current = performance.now(); animFrameRef.current = requestAnimationFrame(loop);
-  }, [loop]);
+  }, [loop, resume]);
 
   const stopGame = useCallback(() => {
     gameStateRef.current = 'idle'; setGameState('idle');
