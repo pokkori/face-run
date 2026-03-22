@@ -257,7 +257,9 @@ function GamePageInner() {
                   </svg>
                   <span className={`text-sm font-bold ${streak >= 7 ? 'text-amber-300' : 'text-gray-300'}`}>
                     {streak}日連続！
-                    {streak >= 7 && ' 🔥 7日達成！'}
+                    {streak >= 7 && (
+                      <span className="ml-1 text-amber-400">★7日達成！</span>
+                    )}
                   </span>
                 </div>
               )}
