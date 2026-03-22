@@ -175,11 +175,17 @@ function GamePageInner() {
               </div>
 
               {!cameraEnabled && (
-                <button onClick={enableCamera}
-                  className="w-full mb-3 min-h-[44px] bg-white/10 hover:bg-white/20 border border-white/30 text-white py-3 px-4 rounded-xl text-sm transition-all"
-                  aria-label="カメラを有効にして顔認識を使う">
-                  カメラで顔認識を使う
-                </button>
+                <>
+                  <button onClick={enableCamera}
+                    className="w-full mb-2 min-h-[44px] bg-white/10 hover:bg-white/20 border border-white/30 text-white py-3 px-4 rounded-xl text-sm transition-all"
+                    aria-label="カメラを有効にして顔認識を使う">
+                    カメラで顔認識を使う
+                  </button>
+                  <div className="flex items-center justify-center gap-1.5 mb-3 text-xs text-green-400/80" role="note" aria-label="プライバシー保護の説明">
+                    <svg viewBox="0 0 16 16" width={12} height={12} fill="currentColor"><path d="M8 1L2 3.5v5C2 12 5 14.5 8 15c3-0.5 6-3 6-6.5v-5L8 1z"/></svg>
+                    <span>端末内のみで処理 · 外部サーバー送信なし</span>
+                  </div>
+                </>
               )}
               {cameraEnabled && faceLoaded && (
                 <div className="text-green-400 text-sm mb-3">顔認識有効 - 口を開けてジャンプ！</div>
