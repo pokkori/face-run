@@ -49,6 +49,7 @@ interface GameData {
   maxCombo: number;
   comboDisplay: ComboDisplay | null;
   shakeTime: number;
+  deadAnimScore: number;
 }
 
 function laneX(lane: Lane): number { return LANE_WIDTH * lane + LANE_WIDTH / 2; }
@@ -65,7 +66,7 @@ function initGame(): GameData {
     player: { lane: 1, y: GROUND_Y, vy: 0, isJumping: false, canDoubleJump: false, isAlive: true },
     obstacles: [], particles: [], score: 0, speed: INITIAL_SPEED,
     nextObstacleIn: 1.5, obstacleId: 0, elapsed: 0,
-    combo: 0, maxCombo: 0, comboDisplay: null, shakeTime: 0,
+    combo: 0, maxCombo: 0, comboDisplay: null, shakeTime: 0, deadAnimScore: 0,
   };
 }
 
@@ -328,10 +329,33 @@ export function useGameLoop(
 
     // HUD: スコアバー
     ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.fillRect(0, 0, CANVAS_W, 48);
-    ctx.fillStyle = '#f59e0b'; ctx.font = 'bold 20px system-ui'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
-    ctx.fillText(`Score: ${gd.score}`, 12, 24);
 
-    // コンボ表示
+    // スコア左上（大きく・グロー付き）
+    ctx.save();
+    ctx.fillStyle = '#f59e0b';
+    ctx.font = 'bold 28px sans-serif';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.shadowColor = '#000';
+    ctx.shadowBlur = 8;
+    ctx.fillText(`${gd.score}`, 16, 36);
+    ctx.restore();
+
+    // コンボ右上（combo >= 2 のとき）
+    if (gd.combo >= 2) {
+      const comboColor = gd.combo >= 12 ? '#FF4500' : gd.combo >= 5 ? '#FF8C00' : '#4ade80';
+      ctx.save();
+      ctx.fillStyle = comboColor;
+      ctx.font = 'bold 28px sans-serif';
+      ctx.textAlign = 'right';
+      ctx.textBaseline = 'middle';
+      ctx.shadowColor = '#000';
+      ctx.shadowBlur = 8;
+      ctx.fillText(`x${gd.combo}`, CANVAS_W - 16, 36);
+      ctx.restore();
+    }
+
+    // コンボ演出（中央）
     if (gd.comboDisplay && gd.comboDisplay.timeLeft > 0) {
       const alpha = Math.min(1, gd.comboDisplay.timeLeft / 0.5);
       ctx.save();
@@ -346,17 +370,50 @@ export function useGameLoop(
       ctx.restore();
     }
 
-    // コンボカウンター常時表示
-    if (gd.combo >= 5) {
-      ctx.fillStyle = '#f59e0b';
-      ctx.font = 'bold 14px system-ui';
-      ctx.textAlign = 'right';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(`COMBO ${gd.combo}`, CANVAS_W - 12, 24);
-    }
-
     ctx.restore();
   }, [drawBackground, drawSvgChar]);
+
+  const deadLoop = useCallback((time: number) => {
+    const gd = gameDataRef.current;
+    const finalScore = gd.score;
+    gd.deadAnimScore += (finalScore - gd.deadAnimScore) * 0.15;
+    const canvas = canvasRef.current;
+    if (canvas) {
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        // dead画面の背景を再描画
+        const grad = ctx.createLinearGradient(0, 0, 0, CANVAS_H);
+        grad.addColorStop(0, '#0f0c29'); grad.addColorStop(1, '#302b63');
+        ctx.fillStyle = grad; ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+        // カウントアップスコア表示
+        ctx.save();
+        ctx.fillStyle = '#f59e0b';
+        ctx.font = 'bold 48px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.shadowColor = '#000';
+        ctx.shadowBlur = 12;
+        ctx.fillText(`${Math.round(gd.deadAnimScore)}`, CANVAS_W / 2, CANVAS_H / 2 - 40);
+        ctx.restore();
+        // GAME OVER テキスト
+        ctx.save();
+        ctx.fillStyle = '#ef4444';
+        ctx.font = 'bold 28px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.shadowColor = '#000';
+        ctx.shadowBlur = 8;
+        ctx.fillText('GAME OVER', CANVAS_W / 2, CANVAS_H / 2 - 100);
+        ctx.restore();
+      }
+    }
+    // カウントアップが収束するまで継続（差が1未満になったら停止）
+    if (Math.abs(finalScore - gd.deadAnimScore) > 1) {
+      animFrameRef.current = requestAnimationFrame(deadLoop);
+    } else {
+      gd.deadAnimScore = finalScore;
+    }
+  }, [canvasRef]);
 
   const loop = useCallback((time: number) => {
     if (gameStateRef.current !== 'playing') return;
@@ -369,10 +426,14 @@ export function useGameLoop(
       setScore(gd.score);
       setMaxCombo(gd.maxCombo);
       setHighScore((hs) => { const n = Math.max(hs, gd.score); localStorage.setItem('facerun_highscore', String(n)); return n; });
-      setGameState('dead'); gameStateRef.current = 'dead'; return;
+      setGameState('dead'); gameStateRef.current = 'dead';
+      // カウントアップアニメ開始
+      gd.deadAnimScore = 0;
+      animFrameRef.current = requestAnimationFrame(deadLoop);
+      return;
     }
     setScore(gd.score); animFrameRef.current = requestAnimationFrame(loop);
-  }, [update, draw, canvasRef]);
+  }, [update, draw, canvasRef, deadLoop]);
 
   const startGame = useCallback(() => {
     resume();
