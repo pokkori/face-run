@@ -237,6 +237,11 @@ function GamePageInner() {
                 aria-label="スコアをシェアする">
                 スコアをシェア
               </button>
+              <Link href="/daily"
+                className="block w-full min-h-[44px] bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/40 text-amber-300 py-3 px-6 rounded-xl text-sm text-center transition-all mb-3"
+                aria-label="デイリーチャレンジに挑戦する">
+                デイリーチャレンジに挑戦 →
+              </Link>
 
               <div className="mt-2">
                 <AdBanner />

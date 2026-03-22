@@ -242,8 +242,8 @@ export function useGameLoop(
       }
       return obs.y < CANVAS_H + OBSTACLE_SIZE;
     });
-    // コンボ倍率込みスコア計算
-    const multiplier = gd.combo >= 20 ? 3 : gd.combo >= 10 ? 2 : 1;
+    // コンボ倍率込みスコア計算（comboDisplay表示と一致させる: x2=5回, x3=12回）
+    const multiplier = gd.combo >= 12 ? 3 : gd.combo >= 5 ? 2 : 1;
     gd.score = Math.floor((gd.elapsed * 10 + (gd.speed - INITIAL_SPEED) * 0.5) * multiplier);
     // スコア100倍数達成パーティクル
     const canvas = canvasRef.current;
@@ -408,19 +408,8 @@ export function useGameLoop(
       ctx.fillText('NINJA', CANVAS_W / 2, CANVAS_H / 2 - 40);
     }
 
-    // チュートリアル3行
-    ctx.fillStyle = '#f3f4f6'; ctx.font = '15px system-ui'; ctx.textBaseline = 'top';
-    const tutLines = [
-      '口を開ける = ジャンプ',
-      '頭を傾ける = 左右移動',
-      '眉を上げる = 二段ジャンプ',
-    ];
-    tutLines.forEach((line, i) => {
-      ctx.fillText(line, CANVAS_W / 2, CANVAS_H / 2 + 10 + i * 24);
-    });
-
     ctx.fillStyle = '#9ca3af'; ctx.font = '16px system-ui'; ctx.textBaseline = 'middle';
-    ctx.fillText('スタートボタンを押してください', CANVAS_W / 2, CANVAS_H / 2 + 110);
+    ctx.fillText('スタートボタンを押してください', CANVAS_W / 2, CANVAS_H / 2 + 60);
   }, [gameState, canvasRef]);
 
   return { gameState, score, highScore, maxCombo, startGame, stopGame };
