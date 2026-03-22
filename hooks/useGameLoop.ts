@@ -18,7 +18,7 @@ const INITIAL_SPEED = 300;
 const SPEED_INCREMENT = 20;
 const OBSTACLE_INTERVAL_MIN = 0.8;
 const OBSTACLE_INTERVAL_MAX = 2.0;
-const PARTICLES_PER_HIT = 12;
+const PARTICLES_PER_HIT = 30;
 const FEVER_COMBO_THRESHOLD = 15;
 const FEVER_DURATION = 10;
 const FEVER_SPEED_BOOST = 1.35;
@@ -159,14 +159,27 @@ export function useGameLoop(
     }
   }, []);
 
-  const drawBackground = useCallback((ctx: CanvasRenderingContext2D, elapsed: number, isFever: boolean) => {
+  const drawBackground = useCallback((ctx: CanvasRenderingContext2D, elapsed: number, isFever: boolean, score: number) => {
     const grad = ctx.createLinearGradient(0, 0, 0, CANVAS_H);
     if (isFever) {
       const pulse = Math.sin(elapsed * 6) * 0.15 + 0.85;
       grad.addColorStop(0, `rgba(${Math.round(180*pulse)},${Math.round(60*pulse)},0,1)`);
       grad.addColorStop(0.5, `rgba(${Math.round(120*pulse)},${Math.round(20*pulse)},0,1)`);
       grad.addColorStop(1, `rgba(60,0,0,1)`);
+    } else if (score >= 2500) {
+      // 宇宙
+      grad.addColorStop(0, '#0A0A2A'); grad.addColorStop(0.6, '#1a1a4e'); grad.addColorStop(1, '#0a0a1a');
+    } else if (score >= 1500) {
+      // サイバー空間
+      grad.addColorStop(0, '#0D0D2B'); grad.addColorStop(0.6, '#3B0D6B'); grad.addColorStop(1, '#0D1B2B');
+    } else if (score >= 800) {
+      // 深海
+      grad.addColorStop(0, '#001020'); grad.addColorStop(0.6, '#004E92'); grad.addColorStop(1, '#001830');
+    } else if (score >= 300) {
+      // 炎の荒野
+      grad.addColorStop(0, '#1a0000'); grad.addColorStop(0.6, '#3B0D00'); grad.addColorStop(1, '#0a0000');
     } else {
+      // 都市の夜（初期）
       grad.addColorStop(0, '#0f0c29'); grad.addColorStop(0.6, '#302b63'); grad.addColorStop(1, '#24243e');
     }
     ctx.fillStyle = grad; ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
@@ -310,7 +323,7 @@ export function useGameLoop(
 
     const isFever = gd.feverTime > 0;
     ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
-    drawBackground(ctx, gd.elapsed, isFever);
+    drawBackground(ctx, gd.elapsed, isFever, gd.score);
 
     // 障害物描画 (SVG)
     gd.obstacles.forEach((obs) => {
