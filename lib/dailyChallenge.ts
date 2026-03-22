@@ -38,7 +38,37 @@ export function getStreak(): number {
   yesterday.setDate(yesterday.getDate() - 1);
   const yesterdayKey = yesterday.toISOString().slice(0, 10);
   if (lastDate === today || lastDate === yesterdayKey) return streak;
+  // ストリークリカバリー（1日ミスをカバー）使用済みか確認
+  const twoDaysAgo = new Date();
+  twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
+  const twoDaysAgoKey = twoDaysAgo.toISOString().slice(0, 10);
+  const recoveryUsed = localStorage.getItem('facerun_streak_recovery') === today;
+  if (!recoveryUsed && lastDate === twoDaysAgoKey) return streak; // リカバリー可能状態で保持
   return 0;
+}
+
+export function useStreakRecovery(): boolean {
+  if (typeof localStorage === 'undefined') return false;
+  const today = getTodayKey();
+  if (localStorage.getItem('facerun_streak_recovery') === today) return false; // 今日既に使用
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterdayKey = yesterday.toISOString().slice(0, 10);
+  const lastDate = localStorage.getItem('facerun_streak_date') || '';
+  const twoDaysAgo = new Date();
+  twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
+  if (lastDate !== twoDaysAgo.toISOString().slice(0, 10)) return false;
+  // リカバリー実行
+  localStorage.setItem('facerun_streak_recovery', today);
+  localStorage.setItem('facerun_streak_date', yesterdayKey); // 昨日としてカウントさせる
+  return true;
+}
+
+export function getTomorrowTarget(): number {
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const key = tomorrow.toISOString().slice(0, 10);
+  return getDailyTarget(key);
 }
 
 export function updateStreak(): void {
