@@ -46,6 +46,7 @@ interface GameData {
   obstacleId: number;
   elapsed: number;
   combo: number;
+  maxCombo: number;
   comboDisplay: ComboDisplay | null;
   shakeTime: number;
 }
@@ -64,7 +65,7 @@ function initGame(): GameData {
     player: { lane: 1, y: GROUND_Y, vy: 0, isJumping: false, canDoubleJump: false, isAlive: true },
     obstacles: [], particles: [], score: 0, speed: INITIAL_SPEED,
     nextObstacleIn: 1.5, obstacleId: 0, elapsed: 0,
-    combo: 0, comboDisplay: null, shakeTime: 0,
+    combo: 0, maxCombo: 0, comboDisplay: null, shakeTime: 0,
   };
 }
 
@@ -75,6 +76,7 @@ export function useGameLoop(
   const [gameState, setGameState] = useState<GameState>('idle');
   const [score, setScore] = useState(0);
   const [highScore, setHighScore] = useState(0);
+  const [maxCombo, setMaxCombo] = useState(0);
   const gameDataRef = useRef<GameData>(initGame());
   const gameStateRef = useRef<GameState>('idle');
   const prevScoreRef = useRef(0);
@@ -213,6 +215,7 @@ export function useGameLoop(
       if (!obs.dodged && obs.y > py + OBSTACLE_SIZE) {
         obs.dodged = true;
         gd.combo += 1;
+        if (gd.combo > gd.maxCombo) gd.maxCombo = gd.combo;
         playDodge();
         // コンボマイルストーン
         if (gd.combo >= 20) {
@@ -347,6 +350,7 @@ export function useGameLoop(
     if (canvas) { const ctx = canvas.getContext('2d'); if (ctx) draw(ctx); }
     if (!gd.player.isAlive) {
       setScore(gd.score);
+      setMaxCombo(gd.maxCombo);
       setHighScore((hs) => { const n = Math.max(hs, gd.score); localStorage.setItem('facerun_highscore', String(n)); return n; });
       setGameState('dead'); gameStateRef.current = 'dead'; return;
     }
@@ -402,5 +406,5 @@ export function useGameLoop(
     ctx.fillText('スタートボタンを押してください', CANVAS_W / 2, CANVAS_H / 2 + 110);
   }, [gameState, canvasRef]);
 
-  return { gameState, score, highScore, startGame, stopGame };
+  return { gameState, score, highScore, maxCombo, startGame, stopGame };
 }

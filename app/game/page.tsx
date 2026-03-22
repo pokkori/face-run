@@ -42,7 +42,7 @@ function GamePageInner() {
   }, [sensitivity]);
 
   const { isLoaded: faceLoaded, isLoading: faceLoading, error: faceError, faceInputRef, loadModels } = useFaceDetection(videoRef, sensitivity);
-  const { gameState, score, highScore, startGame } = useGameLoop(canvasRef, faceInputRef);
+  const { gameState, score, highScore, maxCombo, startGame } = useGameLoop(canvasRef, faceInputRef);
   const { startBGM, stopBGM } = useBGM();
 
   // ゲームオーバー時: BGM停止 & デイリー結果保存
@@ -77,9 +77,8 @@ function GamePageInner() {
   };
 
   const handleShare = async () => {
-    const combo = 0; // maxCombo は useGameLoop から公開されていないため 0
     const isHigh = score > 0 && score >= (highScore ?? 0);
-    const blob = await generateScoreCard(score, isHigh, combo);
+    const blob = await generateScoreCard(score, isHigh, maxCombo);
     const shareText = `フェイスランで${score}点達成！ #フェイスラン\nhttps://face-run.vercel.app`;
 
     if (blob && navigator.canShare?.({ files: [new File([blob], 'facerun.png', { type: 'image/png' })] })) {
