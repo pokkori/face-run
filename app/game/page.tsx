@@ -205,20 +205,32 @@ function GamePageInner() {
           </div>
         )}
 
-        {gameState === 'dead' && (
+        {gameState === 'dead' && (() => {
+          const rank = score >= 100 ? 'S' : score >= 50 ? 'A' : score >= 25 ? 'B' : score >= 10 ? 'C' : 'D';
+          const rankColor = rank === 'S' ? '#FFD700' : rank === 'A' ? '#f59e0b' : rank === 'B' ? '#60a5fa' : rank === 'C' ? '#9ca3af' : '#6b7280';
+          const nextRankScore = rank === 'D' ? 10 : rank === 'C' ? 25 : rank === 'B' ? 50 : rank === 'A' ? 100 : null;
+          return (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/70 rounded-xl">
             <div className="text-center px-6 w-full">
               <h2 className="text-3xl font-bold text-red-400 mb-2">ゲームオーバー</h2>
-              <p className="text-[#f59e0b] text-5xl font-bold mb-1">{score}</p>
+              <div className="flex items-center justify-center gap-3 mb-1">
+                <p className="text-[#f59e0b] text-5xl font-bold">{score}</p>
+                <div className="flex flex-col items-center">
+                  <span className="text-2xl font-black" style={{ color: rankColor }}>ランク{rank}</span>
+                </div>
+              </div>
               <p className="text-gray-400 text-sm mb-1">点</p>
               {score >= highScore && score > 0 && (
                 <p className="text-[#f59e0b] text-sm font-bold mb-2 animate-pulse">NEW RECORD!</p>
               )}
               {score < highScore && (
-                <div className="mb-2">
+                <div className="mb-1">
                   <p className="text-gray-400 text-xs">Best: {highScore}</p>
                   <p className="text-amber-300 text-sm font-bold">あと {highScore - score} 点で自己ベスト更新！</p>
                 </div>
+              )}
+              {nextRankScore !== null && (
+                <p className="text-xs mb-2" style={{ color: rankColor }}>あと{nextRankScore - score}点でランク{rank === 'D' ? 'C' : rank === 'C' ? 'B' : rank === 'B' ? 'A' : 'S'}！</p>
               )}
 
               {/* デイリーチャレンジ達成バナー */}
@@ -254,7 +266,8 @@ function GamePageInner() {
               </div>
             </div>
           </div>
-        )}
+          );
+        })()}
       </div>
 
       {gameState === 'playing' && (
