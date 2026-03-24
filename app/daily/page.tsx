@@ -41,7 +41,7 @@ export default function DailyPage() {
             : 'bg-amber-500/20 border border-amber-400/30'
         }`}>
           <p className="text-amber-300 font-bold">
-            {milestone ? `★ ${milestone.label} ★` : `${streak}日連続チャレンジ中！`}
+            {milestone ? ` ${milestone.label} ` : `${streak}日連続チャレンジ中！`}
           </p>
           {milestone && (
             <p className="text-amber-200 text-sm mt-1">{milestone.reward}</p>

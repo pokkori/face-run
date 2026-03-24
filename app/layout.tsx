@@ -25,6 +25,22 @@ export const metadata: Metadata = {
   },
 };
 
+const JSON_LD = {
+  "@context": "https://schema.org",
+  "@type": "VideoGame",
+  "name": "フェイスラン",
+  "url": "https://face-run.vercel.app",
+  "description": "顔の動きでキャラクターを操作するWebゲーム。口を開けてジャンプ、眉を上げて二段ジャンプ、頭を傾けてレーン移動。",
+  "genre": ["Action", "Endless Runner"],
+  "applicationCategory": "Game",
+  "operatingSystem": "Web",
+  "inLanguage": "ja",
+  "author": {
+    "@type": "Organization",
+    "name": "ポッコリラボ"
+  }
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -33,6 +49,12 @@ export default function RootLayout({
   const adsenseId = process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID;
   return (
     <html lang="ja">
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD) }}
+        />
+      </head>
       <body className="min-h-screen bg-[#0f0c29] text-[#f3f4f6]">
         {adsenseId && (
           <Script

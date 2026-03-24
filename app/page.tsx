@@ -21,28 +21,30 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-gradient-to-b from-[#0f0c29] via-[#302b63] to-[#0f0c29] flex flex-col items-center justify-center px-4">
       {/* ヒーローセクション */}
-      <div className="text-center mb-12">
-        {/* F-R25-5: 絵文字 -> インラインSVG忍者 */}
-        <div className="flex justify-center mb-6 animate-[float_3s_ease-in-out_infinite]">
-          <NinjaSvg />
-        </div>
-        <h1 className="text-4xl md:text-5xl font-bold text-white mb-4 leading-tight">
-          <span className="text-[#f59e0b]">顔だけ</span>で操作する
-          <br />
-          エンドレスランナー
-        </h1>
-        <p className="text-lg text-gray-300 mb-8 max-w-md mx-auto">
-          カメラがあれば顔の動きだけで操作できる、全く新しいゲーム体験。
-          カメラなしでもキーボード・タップで遊べます。
-        </p>
-        <Link
-          href="/game"
-          className="inline-block bg-[#f59e0b] hover:bg-[#d97706] text-[#0f0c29] font-bold text-xl px-10 py-4 rounded-full transition-all duration-200 hover:scale-105 shadow-lg shadow-[#f59e0b]/30 mb-4"
-        >
-          遊んでみる
-        </Link>
-        <div className="w-full max-w-xs mx-auto">
-          <DailyButton />
+      <div className="text-center mb-12 w-full max-w-lg">
+        <div className="rounded-3xl p-8 mb-8" style={{ background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '24px' }}>
+          {/* F-R25-5: 絵文字 -> インラインSVG忍者 */}
+          <div className="flex justify-center mb-6 animate-[float_3s_ease-in-out_infinite]">
+            <NinjaSvg />
+          </div>
+          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4 leading-tight">
+            <span className="text-[#f59e0b]">顔だけ</span>で操作する
+            <br />
+            エンドレスランナー
+          </h1>
+          <p className="text-lg text-gray-300 mb-8 max-w-md mx-auto">
+            カメラがあれば顔の動きだけで操作できる、全く新しいゲーム体験。
+            カメラなしでもキーボード・タップで遊べます。
+          </p>
+          <Link
+            href="/game"
+            className="inline-block bg-[#f59e0b] hover:bg-[#d97706] text-[#0f0c29] font-bold text-xl px-10 py-4 rounded-full transition-all duration-200 hover:scale-105 shadow-lg shadow-[#f59e0b]/30 mb-4"
+          >
+            遊んでみる
+          </Link>
+          <div className="w-full max-w-xs mx-auto">
+            <DailyButton />
+          </div>
         </div>
       </div>
 
@@ -51,7 +53,7 @@ export default function Home() {
         <h2 className="text-2xl font-bold text-center text-[#f59e0b] mb-6">操作方法</h2>
         <div className="grid grid-cols-1 gap-4">
           {/* カメラ操作 */}
-          <div className="bg-white/5 rounded-2xl p-5 border border-white/10">
+          <div className="rounded-2xl p-5" style={{ background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '16px' }}>
             <h3 className="text-sm font-semibold text-[#f59e0b] mb-3 uppercase tracking-wider">
               FACE カメラモード（顔認識）
             </h3>
@@ -82,7 +84,7 @@ export default function Home() {
           </div>
 
           {/* キーボード操作 */}
-          <div className="bg-white/5 rounded-2xl p-5 border border-white/10">
+          <div className="rounded-2xl p-5" style={{ background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '16px' }}>
             <h3 className="text-sm font-semibold text-gray-400 mb-3 uppercase tracking-wider">
               RUN キーボード / タップモード
             </h3>
@@ -115,7 +117,8 @@ export default function Home() {
           ].map((f) => (
             <div
               key={f.title}
-              className="bg-white/5 rounded-xl p-4 text-center border border-white/10"
+              className="rounded-xl p-4 text-center"
+              style={{ background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '16px' }}
             >
               <div className="text-xs font-bold text-[#f59e0b] mb-2">{f.icon}</div>
               <div className="font-semibold text-white text-sm">{f.title}</div>
@@ -136,10 +139,10 @@ export default function Home() {
       {/* フッター */}
       <footer className="text-center text-gray-500 text-sm pb-8">
         <div className="flex gap-4 justify-center mb-2">
-          <Link href="/legal" className="hover:text-gray-300">
+          <Link href="/legal" aria-label="特定商取引法に基づく表示" className="hover:text-gray-300">
             特定商取引法
           </Link>
-          <Link href="/privacy" className="hover:text-gray-300">
+          <Link href="/privacy" aria-label="プライバシーポリシーを見る" className="hover:text-gray-300">
             プライバシーポリシー
           </Link>
         </div>
