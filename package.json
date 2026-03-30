@@ -12,7 +12,9 @@
     "@vladmandic/face-api": "^1.7.15",
     "next": "^16.1.7",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "react-native-reanimated": "~3.17.4",
+    "react-native-svg": "^15.15.4"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

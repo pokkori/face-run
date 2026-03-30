@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { DailyButton } from "../components/DailyButton";
 
-// インラインSVG忍者キャラ（絵文字代替）
+// インラインSVG忍者キャラ
 function NinjaSvg() {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" width={48} height={48}>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" width={64} height={64}>
       <rect x="0" y="0" width="40" height="40" fill="#1a1a1a" rx="4"/>
       <ellipse cx="20" cy="14" rx="10" ry="10" fill="#1a1a1a"/>
       <rect x="4" y="10" width="32" height="8" fill="#CC0000" rx="2"/>
@@ -17,18 +17,51 @@ function NinjaSvg() {
   );
 }
 
+/* --- Floating particles --- */
+function FloatingParticles() {
+  return (
+    <>
+      <style>{`
+        @keyframes cosmicFloat {
+          0% { transform: translateY(0) scale(1); opacity: 0.3; }
+          50% { transform: translateY(-50px) scale(1.5); opacity: 0.7; }
+          100% { transform: translateY(-100px) scale(0.5); opacity: 0; }
+        }
+      `}</style>
+      {[10, 25, 40, 60, 75, 90].map((left, i) => (
+        <div key={i} className="absolute pointer-events-none" style={{
+          left: `${left}%`, bottom: `${5 + i * 8}%`,
+          width: 3 + i % 3 * 2, height: 3 + i % 3 * 2,
+          borderRadius: '50%',
+          background: `radial-gradient(circle, ${['#f59e0b', '#667eea', '#764ba2', '#f59e0b', '#667eea', '#764ba2'][i]}, transparent)`,
+          animation: `cosmicFloat ${4 + i}s ease-in-out ${i * 0.6}s infinite`,
+          boxShadow: `0 0 8px ${['rgba(245,158,11,0.5)', 'rgba(102,126,234,0.5)', 'rgba(118,75,162,0.5)'][i % 3]}`,
+        }} />
+      ))}
+    </>
+  );
+}
+
 export default function Home() {
   return (
-    <main className="min-h-screen bg-gradient-to-b from-[#0f0c29] via-[#302b63] to-[#0f0c29] flex flex-col items-center justify-center px-4">
+    <main className="min-h-screen flex flex-col items-center justify-center px-4 relative overflow-hidden"
+      style={{
+        background: 'radial-gradient(ellipse at 20% 50%, rgba(102,126,234,0.15) 0%, transparent 50%), radial-gradient(ellipse at 80% 20%, rgba(118,75,162,0.1) 0%, transparent 50%), radial-gradient(ellipse at 50% 80%, rgba(245,158,11,0.08) 0%, transparent 50%), linear-gradient(160deg, #0f0c29, #302b63, #0f0c29)',
+      }}>
+      <FloatingParticles />
       {/* ヒーローセクション */}
-      <div className="text-center mb-12 w-full max-w-lg">
-        <div className="rounded-3xl p-8 mb-8" style={{ background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '24px' }}>
-          {/* F-R25-5: 絵文字 -> インラインSVG忍者 */}
+      <div className="text-center mb-12 w-full max-w-lg relative z-10">
+        <div className="rounded-3xl p-8 mb-8" style={{ background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '24px', boxShadow: '0 8px 32px rgba(0,0,0,0.3)' }}>
           <div className="flex justify-center mb-6 animate-[float_3s_ease-in-out_infinite]">
             <NinjaSvg />
           </div>
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4 leading-tight">
-            <span className="text-[#f59e0b]">顔だけ</span>で操作する
+          <h1 className="text-4xl md:text-5xl font-black mb-4 leading-tight" style={{
+            background: 'linear-gradient(135deg, #f59e0b 0%, #FF6B6B 50%, #764ba2 100%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            filter: 'drop-shadow(0 0 20px rgba(245,158,11,0.4))',
+          }}>
+            顔だけで操作する
             <br />
             エンドレスランナー
           </h1>
@@ -38,7 +71,12 @@ export default function Home() {
           </p>
           <Link
             href="/game"
-            className="inline-block bg-[#f59e0b] hover:bg-[#d97706] text-[#0f0c29] font-bold text-xl px-10 py-4 rounded-full transition-all duration-200 hover:scale-105 shadow-lg shadow-[#f59e0b]/30 mb-4"
+            className="inline-block text-[#0f0c29] font-black text-xl px-10 py-4 rounded-2xl transition-all duration-200 hover:-translate-y-1 active:scale-[0.95] mb-4 min-h-[56px]"
+            aria-label="フェイスランのゲームを今すぐ遊ぶ"
+            style={{
+              background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 50%, #b45309 100%)',
+              boxShadow: '0 0 30px rgba(245,158,11,0.5), 0 6px 20px rgba(0,0,0,0.4)',
+            }}
           >
             遊んでみる
           </Link>
@@ -131,7 +169,12 @@ export default function Home() {
       {/* CTA */}
       <Link
         href="/game"
-        className="inline-block bg-[#f59e0b] hover:bg-[#d97706] text-[#0f0c29] font-bold text-xl px-10 py-4 rounded-full transition-all duration-200 hover:scale-105 shadow-lg shadow-[#f59e0b]/30 mb-12"
+        className="inline-block text-[#0f0c29] font-black text-xl px-10 py-4 rounded-2xl transition-all duration-200 hover:-translate-y-1 active:scale-[0.95] mb-12 min-h-[56px] relative z-10"
+        aria-label="フェイスランのゲームを今すぐ遊ぶ"
+        style={{
+          background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 50%, #b45309 100%)',
+          boxShadow: '0 0 30px rgba(245,158,11,0.5), 0 6px 20px rgba(0,0,0,0.4)',
+        }}
       >
         今すぐ遊ぶ
       </Link>

@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
+import { Noto_Sans_JP } from "next/font/google";
 import Script from 'next/script';
 import { A2HSBanner } from '../components/A2HSBanner';
 import "./globals.css";
+
+const notoSansJP = Noto_Sans_JP({ subsets: ["latin"], weight: ["400", "700"], display: "swap" });
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://face-run.vercel.app"),
@@ -23,6 +26,7 @@ export const metadata: Metadata = {
     title: "フェイスラン - 顔で操作するゲーム",
     description: "カメラで顔認識！口・眉・頭の動きで操作する新感覚ゲーム",
   },
+  other: { "theme-color": "#0f0c29" },
 };
 
 const JSON_LD = {
@@ -55,7 +59,7 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD) }}
         />
       </head>
-      <body className="min-h-screen bg-[#0f0c29] text-[#f3f4f6]">
+      <body className={`${notoSansJP.className} min-h-screen bg-[#0f0c29] text-slate-100 antialiased`}>
         {adsenseId && (
           <Script
             async
