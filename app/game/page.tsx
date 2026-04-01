@@ -9,6 +9,7 @@ import { useBGM } from '@/hooks/useAudio';
 import { generateScoreCard } from '../../lib/generateScoreCard';
 import { saveDailyResult, getStreak, getDailyTarget, getTodayKey } from '../../lib/dailyChallenge';
 import { AdBanner } from '../../components/AdBanner';
+import OrbBackground from '../../components/OrbBackground';
 
 export default function GamePage() {
   return (
@@ -95,8 +96,10 @@ function GamePageInner() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0f0c29] flex flex-col items-center justify-start pt-2 px-2">
-      <div className="w-full max-w-sm flex items-center justify-between mb-2">
+    <div className="min-h-screen flex flex-col items-center justify-start pt-2 px-2 relative"
+      style={{ background: "linear-gradient(160deg, #0f0c29, #1a0a3e, #0f0c29)" }}>
+      <OrbBackground />
+      <div className="w-full max-w-sm flex items-center justify-between mb-2 relative z-10">
         <Link href="/" className="text-[#f59e0b] text-sm hover:underline min-h-[44px] flex items-center" aria-label="ホームに戻る">← ホーム</Link>
         <span className="text-white font-bold">フェイスラン</span>
         <div className="flex items-center gap-2">
@@ -119,7 +122,7 @@ function GamePageInner() {
         </div>
       </div>
 
-      <div className="relative" style={{ width: 360, height: 640 }}>
+      <div className="relative z-10" style={{ width: 360, height: 640 }}>
         <canvas ref={canvasRef} width={360} height={640}
           className="rounded-xl border border-white/20 shadow-2xl shadow-purple-900/50"
           style={{ touchAction: "none" }}
@@ -297,7 +300,7 @@ function GamePageInner() {
       </div>
 
       {gameState === 'playing' && (
-        <div className="mt-3 text-center">
+        <div className="mt-3 text-center relative z-10">
           <span className="text-[#f59e0b] font-bold text-2xl">{score}</span>
           <span className="text-gray-400 text-sm ml-1">点</span>
           {isDailyMode && (

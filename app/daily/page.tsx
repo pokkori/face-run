@@ -2,6 +2,7 @@
 import { getTodayKey, getDailyTarget, getDailyResult, getStreak, getMilestoneReached, isAtRiskOfStreakBreak } from '../../lib/dailyChallenge';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import OrbBackground from '../../components/OrbBackground';
 
 export default function DailyPage() {
   const [result, setResult] = useState<ReturnType<typeof getDailyResult>>(null);
@@ -20,9 +21,18 @@ export default function DailyPage() {
   const milestone = getMilestoneReached(streak);
 
   return (
-    <main className="min-h-screen bg-[#0f0c29] text-white flex flex-col items-center justify-center p-6">
-      <h1 className="text-3xl font-bold text-amber-400 mb-2">デイリーチャレンジ</h1>
-      <p className="text-gray-400 text-sm mb-6">{todayKey}</p>
+    <main
+      className="min-h-screen text-white flex flex-col items-center justify-center p-6 relative"
+      style={{ background: "linear-gradient(160deg, #0f0c29, #1a0a3e, #0f0c29)" }}
+    >
+      <OrbBackground />
+      <h1
+        className="text-3xl font-bold text-amber-400 mb-2 relative z-10"
+        style={{ textShadow: "0 0 16px rgba(245,158,11,0.6)" }}
+      >
+        デイリーチャレンジ
+      </h1>
+      <p className="text-gray-400 text-sm mb-6 relative z-10">{todayKey}</p>
 
       {/* ストリーク失効警告 */}
       {atRisk && streak > 0 && (
@@ -51,7 +61,15 @@ export default function DailyPage() {
           )}
         </div>
       )}
-      <div className="bg-white/5 rounded-2xl p-8 text-center mb-8 w-full max-w-sm">
+      <div
+        className="rounded-2xl p-8 text-center mb-8 w-full max-w-sm relative z-10"
+        style={{
+          background: "rgba(255,255,255,0.05)",
+          backdropFilter: "blur(16px)",
+          border: "1px solid rgba(255,255,255,0.08)",
+          boxShadow: "0 0 24px rgba(147,51,234,0.12)",
+        }}
+      >
         <p className="text-gray-400 text-sm mb-2">今日の目標スコア</p>
         <p className="text-6xl font-bold text-amber-400 mb-2">{target}</p>
         <p className="text-gray-400 text-sm">点</p>
