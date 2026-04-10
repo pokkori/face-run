@@ -98,7 +98,7 @@ function GamePageInner() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-start pt-2 px-2 relative"
       style={{ background: "linear-gradient(160deg, #0f0c29, #1a0a3e, #0f0c29)" }}>
-      <OrbBackground />
+      <OrbBackground theme="game" />
       <div className="w-full max-w-sm flex items-center justify-between mb-2 relative z-10">
         <Link href="/" className="text-[#f59e0b] text-sm hover:underline min-h-[44px] flex items-center" aria-label="ホームに戻る">← ホーム</Link>
         <span className="text-white font-bold">フェイスラン</span>

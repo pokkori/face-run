@@ -25,7 +25,7 @@ export default function DailyPage() {
       className="min-h-screen text-white flex flex-col items-center justify-center p-6 relative"
       style={{ background: "linear-gradient(160deg, #0f0c29, #1a0a3e, #0f0c29)" }}
     >
-      <OrbBackground />
+      <OrbBackground theme="game" />
       <h1
         className="text-3xl font-bold text-amber-400 mb-2 relative z-10"
         style={{ textShadow: "0 0 16px rgba(245,158,11,0.6)" }}
